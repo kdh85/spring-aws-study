@@ -1,11 +1,13 @@
 package com.kdh85.book.springawsstudy.config.auth.dto;
 
+import java.io.Serializable;
+
 import com.kdh85.book.springawsstudy.domain.user.User;
 
 import lombok.Getter;
 
 @Getter
-public class SessionUser {
+public class SessionUser implements Serializable{
 
 	private final String name;
 	private final String email;
