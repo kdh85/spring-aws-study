@@ -7,7 +7,7 @@ import com.kdh85.book.springawsstudy.domain.user.User;
 import lombok.Getter;
 
 @Getter
-public class SessionUser implements Serializable{
+public class SessionUser implements Serializable {
 
 	private final String name;
 	private final String email;
