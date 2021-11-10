@@ -1,20 +1,25 @@
 package com.kdh85.book.springawsstudy.web;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kdh85.book.springawsstudy.domain.posts.Posts;
 import com.kdh85.book.springawsstudy.domain.posts.PostsRepository;
 import com.kdh85.book.springawsstudy.web.dto.PostsSaveRequestDto;
@@ -27,10 +32,20 @@ class PostsApiControllerTest {
 	private int port;
 
 	@Autowired
-	private TestRestTemplate restTemplate;
+	private PostsRepository postsRepository;
 
 	@Autowired
-	private PostsRepository postsRepository;
+	private WebApplicationContext context;
+
+	private MockMvc mockMvc;
+
+	@BeforeEach
+	public void setup() {
+		mockMvc = MockMvcBuilders
+			.webAppContextSetup(context)
+			.apply(springSecurity())
+			.build();
+	}
 
 	@AfterEach
 	void tearDown() {
@@ -38,7 +53,8 @@ class PostsApiControllerTest {
 	}
 
 	@Test
-	void Posts_save_test() {
+	@WithMockUser(roles = "USER")
+	void Posts_save_test() throws Exception {
 		//given
 		String title = "title";
 		String content = "content";
@@ -52,19 +68,20 @@ class PostsApiControllerTest {
 		String url = "http://localhost:" + port + "/api/v1/posts";
 
 		//when
-		ResponseEntity<Long> responseEntity = restTemplate.postForEntity(url, postsSaveRequestDto, Long.class);
+		mockMvc.perform(post(url)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(new ObjectMapper().writeValueAsString(postsSaveRequestDto))
+		).andExpect(status().isOk());
 
 		//then
-		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(responseEntity.getBody()).isGreaterThan(0L);
-
 		List<Posts> all = postsRepository.findAll();
 		assertThat(all.get(0).getTitle()).isEqualTo(title);
 		assertThat(all.get(0).getContent()).isEqualTo(content);
 	}
 
 	@Test
-	void Post_update_test() {
+	@WithMockUser(roles = "USER")
+	void Post_update_test() throws Exception {
 		//given
 		Posts saveData = postsRepository.save(Posts.builder()
 			.title("title")
@@ -82,15 +99,13 @@ class PostsApiControllerTest {
 			.build();
 
 		String url = "http://localhost:" + port + "/api/v1/posts/" + updateId;
-
-		HttpEntity<PostsUpdateRequestDto> requestDtoHttpEntity = new HttpEntity<>(updateRequestDto);
 		//when
-		ResponseEntity<Long> responseEntity = restTemplate.exchange(url, HttpMethod.PUT, requestDtoHttpEntity, Long.class);
+		mockMvc.perform(put(url)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(new ObjectMapper().writeValueAsString(updateRequestDto))
+		).andExpect(status().isOk());
 
 		//then
-		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(responseEntity.getBody()).isGreaterThan(0L);
-
 		List<Posts> all = postsRepository.findAll();
 		assertThat(all.get(0).getTitle()).isEqualTo(expectedTitle);
 		assertThat(all.get(0).getContent()).isEqualTo(expectedContent);
