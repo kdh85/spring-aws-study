@@ -13,7 +13,22 @@ cache:
     - '$HOME/.gradle'
 
 script: "./gradlew clean build"
+# deploy 명령 이전에 수행
+before_deploy:
+  - zip -r spring-aws-study * # 현 위치의 모든 파일을 spring-aws-study 이름으로 zip 압축.
+  - mkdir -p deploy #deploy 디렉토리 생성.
+  - mv spring-aws-study.zip deploy/spring-aws-study.zip #파일을 deploy 디렉토리 아래로 이동.
 
+deploy:
+  - provider: s3
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key: $AWS_SECRET_KEY
+    bucket: spring-aws-study-s3-build
+    region: ap-northeast-2
+    skip_cleanup: true
+    acl: private
+    local_dir: deploy #deploy 하기전에 미리 생성한 디렉토리를 지정.
+    wait-until-deployed : true
 # CI 실행 완료시 메일로 알람
 notifications:
   email:
