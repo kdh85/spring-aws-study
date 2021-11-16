@@ -29,6 +29,17 @@ deploy:
     acl: private
     local_dir: deploy #deploy 하기전에 미리 생성한 디렉토리를 지정.
     wait-until-deployed : true
+  - provider: codedeploy
+    access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
+    secret_access_key: $AWS_SECRET_KEY # Travis repo settings에 설정된 값
+    bucket: spring-aws-study-s3-build # S3 버킷
+    key: spring-aws-study.zip # 빌드 파일을 압축해서 전달
+    bundle_type: zip
+    application: spring-aws-study # 웹 콘솔에서 등록한 CodeDeploy 어플리케이션
+    deployment_group: spring-aws-study-group # 웹 콘솔에서 등록한 CodeDeploy 배포 그룹
+    region: ap-northeast-2
+    wait-until-deployed: true
+
 # CI 실행 완료시 메일로 알람
 notifications:
   email:
