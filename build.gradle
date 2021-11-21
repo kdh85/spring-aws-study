@@ -12,7 +12,7 @@ manifest {
 	)
 }
 group = 'com.kdh85.book'
-version = '1.0.1-SNAPSHOT'
+version = '1.0.1-SNAPSHOT-'+new Date().format("yyyyMMDDHHmmss")
 sourceCompatibility = '1.8'
 
 configurations {
